@@ -1,0 +1,24 @@
+# Archivos y directorios ignorados por Git
+
+# Archivos de Python
+*.pyc
+__pycache__/
+
+# Archivos de entorno
+.env
+
+# Archivos de base de datos
+*.db
+
+# Archivos de logs
+*.log
+
+# Archivos temporales
+*~
+
+# Directorios de desarrollo
+.venv/
+/node_modules/
+
+# Archivos de configuración del IDE
+.vscode/

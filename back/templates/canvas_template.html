@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Artículos</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        h1, h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            color: #007bff;
+        }
+
+        section {
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fdfdfd;
+        }
+
+        /* Estilos para la Lista de Artículos */
+        #articles-list-section {
+            /* display: block; */ /* Controlado por JS */
+        }
+
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .article-item {
+            background-color: #ffffff;
+            border: 1px solid #dcdcdc;
+            border-radius: 8px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .article-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .article-item h3 {
+            margin-top: 0;
+            color: #007bff;
+            font-size: 1.2em;
+        }
+
+        .article-item p {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .loading-message, .no-articles-message {
+            text-align: center;
+            font-style: italic;
+            color: #777;
+            padding: 20px;
+        }
+
+        /* Estilos para la Vista de Revisión (Canvas Section) */
+        #review-section {
+            display: none; /* Ocultar por defecto */
+            position: relative;
+        }
+
+        #back-to-list-button {
+            display: none; /* Controlado por JS */
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #back-to-list-button:hover {
+            background-color: #545b62;
+        }
+
+        .article-title-review {
+            font-size: 1.8em;
+            color: #34495e;
+            margin-top: 0;
+        }
+
+        .article-meta {
+            font-size: 0.9em;
+            color: #777;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        .image-area {
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #e9e9e9;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .image-area h2 {
+            font-size: 1.2em;
+            color: #4CAF50;
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 15px;
+        }
+
+        #article-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+
+        #image-caption {
+            font-style: italic;
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        /* Contenedor flexible para Canvas y Sugerencias */
+        .content-and-suggestions {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas más pequeñas */
+        }
+
+        .canvas-editor {
+            flex: 2; /* Ocupa 2/3 del espacio */
+            min-width: 300px; /* Asegura un tamaño mínimo */
+        }
+
+        .canvas-editor h2 {
+            font-size: 1.2em;
+            color: #3f51b5; /* Un tono de azul para el canvas */
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 15px;
+        }
+
+        .canvas-editor textarea {
+            width: 100%;
+            min-height: 400px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1em;
+            line-height: 1.5;
+            resize: vertical; /* Permite redimensionar verticalmente */
+            box-sizing: border-box; /* Incluye padding y border en el ancho/alto */
+            background-color: #fefefe;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+            transition: border-color 0.2s ease;
+        }
+
+        .canvas-editor textarea:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        .copilot-suggestions-area { /* Área de Sugerencias */
+            flex: 1; /* Ocupa 1/3 del espacio */
+            border-left: 1px solid #eee;
+            padding-left: 20px;
+            max-height: 700px; /* Limita la altura y añade scroll */
+            overflow-y: auto;
+            min-width: 280px; /* Asegura un tamaño mínimo */
+        }
+        .copilot-suggestions-area h2 {
+            margin-top: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+            color: #FF5722; /* Un color naranja para sugerencias */
+        }
+
+        /* Estilo para la lista ul de sugerencias */
+        .copilot-suggestions-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+        .copilot-suggestions-list li.suggestion-item { /* Usar la clase para estilo */
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            color: #495057;
+            white-space: pre-wrap; /* Respeta saltos de línea */
+            word-break: break-word; /* Rompe palabras largas */
+            cursor: pointer; /* Hacer claro que es clicable */
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .copilot-suggestions-list li.suggestion-item:hover {
+            background-color: #e9ecef;
+        }
+        /* Estilo para sugerencias SELECCIONADAS */
+        .copilot-suggestions-list li.suggestion-item.selected {
+            background-color: #cfe2ff; /* Azul claro */
+            border-color: #007bff; /* Borde azul */
+            font-weight: 700; /* Texto en negrita */
+        }
+
+        .copilot-suggestions-list li strong { color: #007bff; } /* Estilo para negrita dentro de sugerencias */
+
+        /* Estilo para el botón Aplicar Seleccionadas */
+        #apply-selected-suggestions-button { /* ID CAMBIADO */
+            display: block; /* Ocupa todo el ancho */
+            width: 100%;
+            padding: 10px;
+            background-color: #17a2b8; /* Color cian/azul */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        #apply-selected-suggestions-button:hover { background-color: #138496; }
+        #apply-selected-suggestions-button:disabled { background-color: #cccccc; cursor: not-allowed; }
+
+        /* Estilo para el área de reescritura libre (ELIMINADA) */
+        /* .rewrite-area { display: none; } */ /* Ocultarla o eliminarla */
+
+
+        .editor-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .editor-actions button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #save-changes-button {
+            background-color: #28a745;
+            color: white;
+        }
+
+        #save-changes-button:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+
+        #publish-button {
+            background-color: #007bff;
+            color: white;
+        }
+
+        #publish-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        .editor-actions button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Media queries para responsividad */
+        @media (max-width: 768px) {
+            .content-and-suggestions {
+                flex-direction: column;
+            }
+            .copilot-suggestions-area {
+                border-left: none;
+                border-top: 1px solid #eee;
+                padding-left: 0;
+                padding-top: 20px;
+            }
+            .editor-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .editor-actions button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+                margin: 15px auto;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            .article-item h3 {
+                font-size: 1.1em;
+            }
+            .canvas-editor textarea {
+                min-height: 300px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gestión de Artículos con Copiloto</h1>
+
+        <section id="articles-list-section">
+            <h2>Artículos Generados</h2>
+            <p class="loading-message">Cargando artículos...</p>
+            <p class="no-articles-message" style="display: none;">No hay artículos generados todavía. Genera nuevos artículos desde tu backend.</p>
+            <ul id="generated-articles-list" class="articles-grid">
+                </ul>
+        </section>
+
+        <section id="review-section">
+            <button id="back-to-list-button">← Volver a la Lista</button>
+            <h2 class="article-title-review">[Título del Artículo]</h2>
+            <p class="article-meta" id="article-meta"></p>
+
+            <div class="image-area">
+                <h2>Imagen Principal</h2>
+                <img id="article-image" src="" alt="Imagen asociada al artículo">
+                <figcaption id="image-caption"></figcaption>
+            </div>
+
+            <div class="content-and-suggestions">
+
+                <div class="canvas-editor">
+                    <h2>Contenido del Artículo (Canvas)</h2>
+                    <textarea id="article-body-editor"></textarea>
+                </div>
+
+                <div class="copilot-suggestions-area">
+                    <h2>Sugerencias del Copiloto</h2>
+                    <button id="generate-suggestions-button" style="margin-bottom: 10px;">Generar Sugerencias</button>
+
+                    <button id="apply-selected-suggestions-button" style="display: none;">Aplicar Sugerencias Seleccionadas</button>
+                    <ul id="copilot-suggestions-list" class="copilot-suggestions-list">
+                        </ul>
+
+                    </div>
+
+            </div>
+
+            <div class="editor-actions">
+                <button id="save-changes-button">Guardar Cambios</button>
+                <button id="publish-button">Publicar Artículo</button>
+            </div>
+
+            </section>
+
+    </div>
+
+    <script>
+        // === Configuración ===
+        const API_URL = 'http://127.0.0.1:8000'; // URL de tu backend FastAPI
+
+        // === Elementos del DOM ===
+        const articlesListSectionElement = document.getElementById('articles-list-section');
+        const generatedArticlesListElement = document.getElementById('generated-articles-list');
+        const loadingArticlesElement = articlesListSectionElement.querySelector('.loading-message');
+        const noArticlesElement = articlesListSectionElement.querySelector('.no-articles-message');
+
+        const reviewSectionElement = document.getElementById('review-section');
+        const reviewArticleTitleElement = reviewSectionElement.querySelector('.article-title-review');
+        const articleMetaElement = reviewSectionElement.querySelector('#article-meta');
+        const articleImageElement = reviewSectionElement.querySelector('#article-image');
+        const imageCaptionElement = reviewSectionElement.querySelector('#image-caption');
+        const articleBodyEditorElement = reviewSectionElement.querySelector('#article-body-editor'); // El Canvas
+        const saveChangesButtonElement = reviewSectionElement.querySelector('#save-changes-button');
+        const publishButtonElement = reviewSectionElement.querySelector('#publish-button');
+        const backToListButtonElement = document.getElementById('back-to-list-button');
+
+        // Elementos del área de sugerencias
+        const copilotSuggestionsAreaElement = document.querySelector('.copilot-suggestions-area');
+        const copilotSuggestionsListElement = document.getElementById('copilot-suggestions-list'); // La lista ul
+        const generateSuggestionsButtonElement = document.getElementById('generate-suggestions-button');
+
+        // === NUEVO Elemento para botón "Aplicar Seleccionadas" ===
+        const applySelectedSuggestionsButtonElement = document.getElementById('apply-selected-suggestions-button'); // Botón Aplicar Seleccionadas
+        // =======================================================
+
+        // --- Elementos de reescritura libre ELIMINADOS ---
+        // const rewriteInstructionElement = document.getElementById('rewrite-instruction');
+        // const rewriteButtonElement = document.getElementById('rewrite-button');
+
+
+        // Estado
+        let currentArticleId = null; // ID del artículo que se está revisando
+
+
+        // === Funciones de UI (Mensajes y Navegación) ===
+        function showMessage(message, type = 'info') { console.log(`[${type.toUpperCase()}] ${message}`); }
+        function navigateTo(sectionId, articleId = null) {
+            articlesListSectionElement.style.display = 'none';
+            reviewSectionElement.style.display = 'none';
+            backToListButtonElement.style.display = 'none';
+            currentArticleId = null;
+
+            if (sectionId === 'articles-list') {
+                articlesListSectionElement.style.display = 'block';
+                loadArticlesList();
+            } else if (sectionId === 'review-section' && articleId !== null) {
+                reviewSectionElement.style.display = 'block';
+                backToListButtonElement.style.display = 'block';
+                currentArticleId = articleId;
+                loadArticleDetails(articleId);
+
+                // === Limpiar área de sugerencias y poner mensaje inicial ===
+                copilotSuggestionsListElement.innerHTML = '';
+                const initialMessageItem = document.createElement('li');
+                initialMessageItem.textContent = 'Genera sugerencias clicando el botón.';
+                initialMessageItem.classList.add('suggestion-item'); // Añadir clase para estilo
+                copilotSuggestionsListElement.appendChild(initialMessageItem);
+                applySelectedSuggestionsButtonElement.style.display = 'none'; // Ocultar botón Aplicar Seleccionadas inicialmente
+
+            } else {
+                showMessage(`Error de navegación: Sección "${sectionId}" no reconocida o falta articleId.`, 'error');
+                articlesListSectionElement.style.display = 'block';
+                loadArticlesList();
+            }
+        }
+
+
+        // === Funciones de Carga de Datos (Artículos) ===
+
+        // loadArticlesList - Carga la lista de artículos generados (existente).
+        async function loadArticlesList() {
+            showMessage("Cargando lista de artículos generados...", 'info');
+            loadingArticlesElement.style.display = 'block';
+            noArticlesElement.style.display = 'none';
+            generatedArticlesListElement.innerHTML = ''; // Clear existing articles
+
+            try {
+                const response = await fetch(`${API_URL}/articles`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const articles = await response.json();
+
+                if (articles.length === 0) {
+                    noArticlesElement.style.display = 'block';
+                } else {
+                    articles.forEach(article => {
+                        const li = document.createElement('li');
+                        li.className = 'article-item';
+                        li.dataset.id = article.id;
+                        li.innerHTML = `
+                            <h3>${article.titulo || 'Sin título'}</h3>
+                            <p>Tema: ${article.tema || 'Desconocido'}</p>
+                            <p>Generado: ${new Date(article.fecha_generacion).toLocaleString()}</p>
+                        `;
+                        li.addEventListener('click', () => navigateTo('review-section', article.id));
+                        generatedArticlesListElement.appendChild(li);
+                    });
+                }
+                showMessage("Lista de artículos cargada exitosamente.", 'success');
+            } catch (error) {
+                showMessage(`Error al cargar la lista de artículos: ${error.message}`, 'error');
+                console.error("Fetch error (loadArticlesList):", error);
+                noArticlesElement.textContent = 'Error al cargar artículos. Intenta de nuevo más tarde.';
+                noArticlesElement.style.display = 'block';
+            } finally {
+                loadingArticlesElement.style.display = 'none';
+            }
+        }
+
+
+        // Carga los detalles de un artículo específico para la Vista de Revisión (Canvas) (existente).
+        // AHORA espere que el endpoint NO retorne 'suggestions'.
+        async function loadArticleDetails(articleId) {
+            showMessage(`Cargando detalles del artículo ID ${articleId}...`, 'info');
+            // ... (limpiar campos, deshabilitar botones) ...
+            reviewArticleTitleElement.textContent = 'Cargando...';
+            articleMetaElement.textContent = '';
+            articleBodyEditorElement.value = 'Cargando contenido...';
+            articleImageElement.src = '';
+            imageCaptionElement.textContent = '';
+
+            saveChangesButtonElement.disabled = true;
+            publishButtonElement.disabled = true;
+            generateSuggestionsButtonElement.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/articles/${articleId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const article = await response.json();
+                showMessage(`Detalles del artículo ${articleId} cargados.`, 'success');
+                console.log("Artículo cargado:", article);
+
+                // Llenar la sección de revisión (Canvas)
+                reviewArticleTitleElement.textContent = article.titulo || 'Sin título';
+                const scoreText = article.score_fuentes_promedio !== null && article.score_fuentes_promedio !== undefined ? ` | Score Fuentes: ${article.score_fuentes_promedio.toFixed(2)}` : '';
+                articleMetaElement.textContent = `Tema: ${article.tema || 'Desconocido'} | Generado: ${new Date(article.fecha_generacion).toLocaleString()}${scoreText}`;
+                articleBodyEditorElement.value = article.body || '';
+
+                // Mostrar la imagen principal (existente)
+                if (article.imagenes && article.imagenes.length > 0) {
+                    const mainImage = article.imagenes[0];
+                    articleImageElement.src = mainImage.url;
+                    articleImageElement.alt = mainImage.alt_text || 'Imagen del artículo';
+                    imageCaptionElement.textContent = mainImage.caption || '';
+                    articleImageElement.style.display = 'block';
+                    imageCaptionElement.style.display = 'block';
+                } else {
+                    articleImageElement.src = '';
+                    articleImageElement.alt = '';
+                    imageCaptionElement.textContent = 'No hay imagen principal.';
+                    articleImageElement.style.display = 'none';
+                    imageCaptionElement.style.display = 'none';
+                }
+
+                // === ÁREA DE SUGERENCIAS ===
+                // El área de sugerencias ya se limpia en navigateTo('review-section')
+                // El mensaje inicial ya se pone en navigateTo('review-section')
+                // El botón "Aplicar Seleccionadas" está oculto inicialmente
+                // El botón "Generar Sugerencias" está habilitado por defecto al cargar
+                // ==============================
+
+
+                saveChangesButtonElement.disabled = false;
+                publishButtonElement.disabled = false;
+                generateSuggestionsButtonElement.disabled = false; // HABILITAR botón de sugerencias al cargar
+
+            } catch (error) {
+                showMessage(`Error al cargar los detalles del artículo: ${error.message}`, 'error');
+                console.error("Fetch error (loadArticleDetails):", error);
+                reviewArticleTitleElement.textContent = 'Error al cargar el artículo';
+                articleBodyEditorElement.value = 'No se pudo cargar el contenido del artículo.';
+            }
+        }
+
+
+        // === Funciones de Disparo de Generación y Guardado ===
+        // handleSaveChanges - Guarda los cambios del Canvas (existente).
+        async function handleSaveChanges() {
+            showMessage("Guardando cambios...", 'info');
+            if (currentArticleId === null) {
+                showMessage("Error: No hay artículo seleccionado para guardar.", 'error');
+                return;
+            }
+
+            saveChangesButtonElement.disabled = true; // Deshabilitar mientras guarda
+
+            const updatedBody = articleBodyEditorElement.value;
+            try {
+                const response = await fetch(`${API_URL}/articles/${currentArticleId}/content`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ body: updatedBody }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}, detail: ${errorData.detail}`);
+                }
+
+                showMessage("Cambios guardados exitosamente.", 'success');
+            } catch (error) {
+                showMessage(`Error al guardar cambios: ${error.message}`, 'error');
+                console.error("Fetch error (saveChanges):", error);
+            } finally {
+                saveChangesButtonElement.disabled = false;
+            }
+        }
+
+        async function handlePublish() { // Hacerla async para usar await fetch
+            showMessage("Disparando publicación...", 'info');
+            if (currentArticleId === null) {
+                showMessage("Error: No hay artículo seleccionado para publicar.", 'error');
+                return;
+            }
+
+            publishButtonElement.disabled = true; // Deshabilitar mientras publica
+            // Opcional: showMessage("Publicando artículo...", 'info');
+
+            try {
+                // === Llama al nuevo endpoint POST /articles/{id}/publish ===
+                // Este endpoint generará el archivo HTML localmente en el servidor backend
+                const response = await fetch(`${API_URL}/articles/${currentArticleId}/publish`, {
+                    method: 'POST', // Usamos POST para disparar la acción
+                    headers: {
+                        'Content-Type': 'application/json', // Aunque no enviemos cuerpo, es buena práctica
+                    },
+                    // body: JSON.stringify({}) // Cuerpo vacío si es POST sin datos
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    showMessage(`Error al publicar (${response.status}): ${result.detail || JSON.stringify(result)}`, 'error');
+                    console.error("API error (publish):", result);
+                } else {
+                    showMessage(`Artículo ID ${currentArticleId} 'publicado' exitosamente. Previsualización generada.`, 'success');
+                    console.log("Resultado de publicación:", result); // Puede incluir filename_preview
+                    // Opcional: Mostrar un enlace al archivo HTML generado si el endpoint lo devuelve
+                    // if (result.filename) { console.log("Archivo HTML:", result.filename); }
+                }
+
+            } catch (error) {
+                showMessage(`Fallo en la solicitud de publicación: ${error.message}`, 'error');
+                console.error("Fetch error (publish):", error);
+            } finally {
+                publishButtonElement.disabled = false; // Habilitar botón de nuevo
+            }
+        }
+
+
+        // === FUNCIÓN: Disparar Generación de Sugerencias ===
+        async function handleGenerateSuggestions() {
+            showMessage("Solicitando sugerencias del Copiloto...", 'info');
+            copilotSuggestionsListElement.innerHTML = ''; // Limpiar sugerencias anteriores
+            const generatingMessageItem = document.createElement('li');
+            generatingMessageItem.textContent = 'Generando...';
+            copilotSuggestionsListElement.appendChild(generatingMessageItem);
+            generateSuggestionsButtonElement.disabled = true; // Deshabilitar botón mientras genera
+            applySelectedSuggestionsButtonElement.style.display = 'none'; // Ocultar botón Aplicar Seleccionadas
+
+
+            if (currentArticleId === null) {
+                showMessage("Error: No hay artículo seleccionado para generar sugerencias.", 'error');
+                generateSuggestionsButtonElement.disabled = false;
+                copilotSuggestionsListElement.innerHTML = '<li>Error al generar sugerencias.</li>';
+                return;
+            }
+
+            try {
+                // Llama al endpoint POST /articles/{id}/generate-suggestions
+                const response = await fetch(`${API_URL}/articles/${currentArticleId}/generate-suggestions`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', },
+                });
+
+                const result = await response.json(); // Esperamos { "suggestions": "texto_sugerencias_plano" }
+
+                if (!response.ok) {
+                    showMessage(`Error al generar sugerencias (${response.status}): ${result.detail || JSON.stringify(result)}`, 'error');
+                    console.error("API error (generate suggestions):", result);
+                    copilotSuggestionsListElement.innerHTML = '<li>Error al generar sugerencias.</li>';
+                } else {
+                    showMessage(`Sugerencias del Copiloto generadas exitosamente.`, 'success');
+                    copilotSuggestionsListElement.innerHTML = ''; // Limpiar el mensaje "Generando..."
+
+                    const suggestionsText = result.suggestions || 'El Copiloto no generó sugerencias.';
+                    // === PARSEAR Y CREAR ITEMS DE LISTA CLICABLES Y SELECCIONABLES ===
+                    const suggestionItems = suggestionsText.split('\n').filter(item => item.trim() !== '');
+
+                    if (suggestionItems.length > 0) {
+                        suggestionItems.forEach(itemText => {
+                            const listItem = document.createElement('li');
+                            listItem.textContent = itemText; // Usar textContent para texto plano
+
+                            // === HACER ITEM CLICABLE PARA SELECCIONAR ===
+                            listItem.classList.add('suggestion-item'); // Añadir una clase para estilos CSS
+                            // Adjuntar listener de selección
+                            listItem.onclick = () => toggleSuggestionSelection(listItem);
+                            // =======================================
+
+                            copilotSuggestionsListElement.appendChild(listItem);
+                        });
+
+                        // === MOSTRAR BOTÓN "APLICAR SELECCIONADAS" ===
+                        applySelectedSuggestionsButtonElement.style.display = 'block';
+                        // =========================================
+
+                    } else {
+                        copilotSuggestionsListElement.innerHTML = '<li>El Copiloto no generó sugerencias específicas.</li>';
+                        applySelectedSuggestionsButtonElement.style.display = 'none'; // Ocultar si no hay sugerencias
+                    }
+                }
+
+            } catch (error) {
+                showMessage(`Fallo en la solicitud de generación de sugerencias: ${error.message}`, 'error');
+                console.error("Fetch error (generate suggestions):", error);
+                copilotSuggestionsListElement.innerHTML = '<li>Error de conexión al generar sugerencias.</li>';
+            } finally { generateSuggestionsButtonElement.disabled = false; }
+        }
+
+        // === NUEVA FUNCIÓN: Alternar Selección de Sugerencia ===
+        function toggleSuggestionSelection(listItem) {
+            listItem.classList.toggle('selected'); // Añadir/Quitar clase 'selected' para estilo CSS
+        }
+
+        // === NUEVA FUNCIÓN: Disparar Aplicar SUGERENCIAS SELECCIONADAS ===
+        async function handleApplySelectedSuggestions() {
+            showMessage("Aplicando sugerencias seleccionadas...", 'info');
+
+            if (currentArticleId === null) {
+                showMessage("Error: No hay artículo seleccionado para aplicar sugerencias.", 'error');
+                return;
+            }
+
+            // === OBTENER TODOS LOS TEXTOS DE LAS SUGERENCIAS SELECCIONADAS ===
+            const selectedSuggestionsElements = copilotSuggestionsListElement.querySelectorAll('li.suggestion-item.selected'); // Seleccionar solo los items seleccionados
+            const selectedSuggestionsText = [];
+            selectedSuggestionsElements.forEach(li => {
+                const itemText = li.textContent.trim();
+                if (itemText !== '') { // Solo agregar texto si no está vacío
+                    selectedSuggestionsText.push(itemText);
+                }
+            });
+
+            if (selectedSuggestionsText.length === 0) {
+                showMessage("Por favor, selecciona al menos una sugerencia para aplicar.", 'info');
+                return;
+            }
+
+            // === COMBINAR SUGERENCIAS SELECCIONADAS EN UNA ÚNICA INSTRUCCIÓN ===
+            // La instrucción para el Copiloto será "Aplica estas sugerencias: ..."
+            const combinedInstruction = "Aplica las siguientes sugerencias de mejora al artículo:\n- " + selectedSuggestionsText.join('\n- ');
+            // =========================================================
+
+
+            // === OBTENER TEXTO DEL CANVAS Y CONSTRUIR PAYLOAD ===
+            // Siempre enviamos el texto COMPLETO actual del Canvas
+            const currentBodyText = articleBodyEditorElement.value;
+            const rewritePayload = {
+                text_to_rewrite: currentBodyText, // Enviar todo el texto del Canvas
+                instruction: combinedInstruction // <--- ENVIAR LA INSTRUCCIÓN COMBINADA
+            };
+            // ===============================================
+
+            // Deshabilitar botones relacionados mientras procesa (Guardar, Publicar, Generar Sugerencias, Reescribir, Aplicar)
+            saveChangesButtonElement.disabled = true;
+            publishButtonElement.disabled = true;
+            generateSuggestionsButtonElement.disabled = true;
+            // rewriteButtonElement.disabled = true; // No existe más el botón Reescribir libre
+            const applyButtons = copilotSuggestionsListElement.querySelectorAll('.apply-button'); // No existen botones individuales, solo el "Aplicar Seleccionadas"
+            // applyButtons.forEach(btn => btn.disabled = true); // No necesario si no hay botones individuales
+            applySelectedSuggestionsButtonElement.disabled = true; // Deshabilitar el botón Aplicar Seleccionadas
+
+            // Opcional: Indicar visualmente que está procesando (spinner)
+            copilotSuggestionsListElement.innerHTML = '<li>Aplicando...</li>'; // Sobrescribir la lista temporalmente
+
+
+            try {
+                // Llama al endpoint POST /articles/{id}/rewrite (el mismo)
+                // Este endpoint debe retornar { "rewritten_text": "..." }
+                const response = await fetch(`${API_URL}/articles/${currentArticleId}/rewrite`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(rewritePayload),
+                });
+
+                const result = await response.json(); // Esperamos { "rewritten_text": "texto reescrito" }
+
+                if (!response.ok) {
+                    showMessage(`Error al aplicar sugerencias seleccionadas (${response.status}): ${result.detail || JSON.stringify(result)}`, 'error');
+                    console.error("API error (apply selected):", result);
+                    // Opcional: Mostrar mensaje de error en el área de sugerencias
+                    copilotSuggestionsListElement.innerHTML = '<li>Error al aplicar.</li>';
+                } else {
+                    showMessage(`Sugerencias seleccionadas aplicadas. Texto regenerado por el Copiloto.`, 'success');
+                    // === REEMPLAZAR EL CONTENIDO DEL CANVAS CON EL TEXTO REESCRITO ===
+                    articleBodyEditorElement.value = result.rewritten_text || ''; // Rellenar el Canvas
+                    // ============================================================
+                    // Opcional: Marcar las sugerencias aplicadas como "usadas" o limpiar la lista de sugerencias
+                    copilotSuggestionsListElement.innerHTML = '<li>Sugerencias aplicadas. Vuelve a generar sugerencias si quieres más.</li>'; // Limpiar lista y poner mensaje
+
+                }
+
+            } catch (error) {
+                showMessage(`Fallo en la solicitud al aplicar sugerencias seleccionadas: ${error.message}`, 'error');
+                console.error("Fetch error (apply selected):", error);
+                // Opcional: Mostrar mensaje de error en el área de sugerencias
+                copilotSuggestionsListElement.innerHTML = '<li>Error de conexión.</li>';
+            } finally {
+                // Habilitar botones de nuevo
+                saveChangesButtonElement.disabled = false;
+                publishButtonElement.disabled = false;
+                generateSuggestionsButtonElement.disabled = false;
+                // El botón Aplicar Seleccionadas ya está habilitado en el finally.
+                applySelectedSuggestionsButtonElement.disabled = false; // Habilitar el botón
+            }
+        }
+
+
+        // handleRewriteText - ELIMINADA (Ya no hay reescritura libre)
+
+
+        // === Inicialización de esta plantilla ===
+        function initArticleManagement() {
+            showMessage("Vista de gestión de artículos cargada.", 'info');
+
+            // Adjuntar event listeners (existentes)
+            saveChangesButtonElement.addEventListener('click', handleSaveChanges);
+            publishButtonElement.addEventListener('click', handlePublish);
+            backToListButtonElement.addEventListener('click', () => navigateTo('articles-list'));
+
+            // Adjuntar event listener al botón de generar sugerencias
+            generateSuggestionsButtonElement.addEventListener('click', handleGenerateSuggestions);
+
+            // === NUEVO: Adjuntar event listener al botón "Aplicar Seleccionadas" ===
+            applySelectedSuggestionsButtonElement.addEventListener('click', handleApplySelectedSuggestions);
+            // ==========================================================
+
+            // Los event listeners para los items de la lista de sugerencias individuales se adjuntan
+            // cuando se crea cada item de la lista de sugerencias en handleGenerateSuggestions.
+
+
+            // MOSTRAR LA LISTA AL INICIO
+            navigateTo('articles-list');
+
+        }
+
+        // === Ejecutar Inicialización al Cargar la Página ===
+        window.onload = initArticleManagement;
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO-Copilot Dashboard (Tema Libre)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 700px; /* Ancho ajustado */
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        header {
+            background-color: #0056b3;
+            color: #fff;
+            padding: 15px 0;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            margin: 0;
+            font-weight: 300;
+        }
+        .section {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #0056b3;
+            margin-top: 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Formulario de Generación */
+        #generate-form { /* Usamos un solo formulario */
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+         .form-group {
+             display: flex;
+             flex-direction: column;
+         }
+         .form-group label {
+             font-weight: 700;
+             margin-bottom: 4px;
+             font-size: 0.95em;
+         }
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95em;
+            width: 100%;
+            box-sizing: border-box;
+        }
+         textarea {
+             min-height: 100px;
+             resize: vertical;
+         }
+
+         .form-group.full-width { /* Para campos que ocupan todo el ancho */
+             grid-column: span 2;
+         }
+
+        #generate-button { /* Botón de Generar */
+            grid-column: span 2;
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+        #generate-button:hover {
+            background-color: #218838;
+        }
+
+        /* Área de Mensajes */
+        #messages {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #e9ecef;
+            color: #333;
+            min-height: 30px;
+            overflow-y: auto;
+            font-size: 0.95em;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+         .message.error {
+             background-color: #f8d7da;
+             color: #721c24;
+             border: 1px solid #f5c6cb;
+             padding: 8px;
+             margin-bottom: 5px;
+             border-radius: 4px;
+         }
+          .message.success {
+             background-color: #d4edda;
+             color: #155724;
+             border: 1px solid #c3e6cb;
+             padding: 8px;
+             margin-bottom: 5px;
+             border-radius: 4px;
+         }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SEO-Copilot Dashboard</h1>
+    </header>
+
+    <div class="container">
+
+        <!-- Sección Única: Generar Artículo con Tema Libre y Parámetros -->
+        <section id="generate-section" class="section">
+            <h2>Generar Nuevo Artículo</h2>
+            <form id="generate-form">
+                <div class="form-group full-width">
+                    <label for="topic">Tema de Búsqueda y Generación:</label>
+                    <input type="text" id="topic" name="tema" placeholder="Ej: Avances de la IA en medicina 2025">
+                </div>
+                <div class="form-group">
+                    <label for="longitud_texto">Longitud (palabras):</label>
+                    <input type="number" id="longitud_texto" name="longitud_texto" value="1500" min="100">
+                </div>
+                <div class="form-group">
+                    <label for="tono_texto">Tono:</label>
+                    <select id="tono_texto" name="tono_texto">
+                        <option value="neutral">Neutral</option>
+                        <option value="formal">Formal</option>
+                        <option value="informal">Informal</option>
+                        <option value="technical">Técnico</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="min_score_fuente">Score Mínimo Fuente:</label>
+                    <input type="number" id="min_score_fuente" name="min_score_fuente" value="5" min="1" max="10">
+                </div>
+                <div class="form-group">
+                    <label for="num_fuentes_scraper"># Buscar (Scraper):</label>
+                    <input type="number" id="num_fuentes_scraper" name="num_fuentes_scraper" value="10" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="num_resultados_scraper"># Analizar (Scraper):</label>
+                    <input type="number" id="num_resultados_scraper" name="num_resultados_scraper" value="5" min="1">
+                </div>
+                <div class="form-group">
+                     <label for="min_score_generador">Score Mínimo Usar:</label>
+                     <input type="number" id="min_score_generador" name="min_score_generador" value="7" min="1" max="10">
+                </div>
+                 <div class="form-group">
+                     <label for="num_fuentes_generador"># Usar (Generador):</label>
+                     <input type="number" id="num_fuentes_generador" name="num_fuentes_generador" value="3" min="1">
+                 </div>
+                 <div class="form-group">
+                     <label for="num_imagenes_buscar"># Imágenes:</label>
+                     <input type="number" id="num_imagenes_buscar" name="num_imagenes_buscar" value="2" min="0">
+                 </div>
+
+                 <!-- Plantillas de prompt (ocultas si no se usan, o eliminadas si se quiere) -->
+                 <!-- Si se eliminaron de models/db, ignorar o eliminar -->
+                 <!-- <input type="hidden" id="prompt_analyzer_template" name="prompt_analyzer_template" value=""> -->
+                 <!-- <input type="hidden" id="prompt_generator_template" name="prompt_generator_template" value=""> -->
+
+
+                <button type="submit" id="generate-button">Iniciar Generación</button>
+            </form>
+        </section>
+
+        <!-- Área de Mensajes/Log -->
+        <div id="messages"></div>
+
+        <!-- Las otras secciones (Lista Artículos, Revisión, DB Admin) están conceptualmente aquí,
+             pero no implementadas en esta demo mínima -->
+
+    </div>
+
+    <script>
+        // === Configuración ===
+        const API_URL = 'http://127.0.0.1:8000'; // URL de tu backend FastAPI
+
+        // === Elementos del DOM ===
+        const generateFormElement = document.getElementById('generate-form');
+        const messagesElement = document.getElementById('messages');
+        const topicInputElement = document.getElementById('topic'); // Referencia al input de tema
+
+        // === Funciones de UI ===
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            if (type !== 'info') {
+                 messageDiv.classList.add(type); // 'success', 'error'
+            }
+            messageDiv.textContent = message;
+            messagesElement.appendChild(messageDiv);
+            // Limitar el número de mensajes
+            while (messagesElement.children.length > 20) {
+                messagesElement.removeChild(messagesElement.children[0]);
+            }
+            messagesElement.scrollTop = messagesElement.scrollHeight; // Scroll al final
+        }
+
+         // === Funciones de Disparo de Generación ===
+         async function handleGenerateSubmit(event) {
+             event.preventDefault(); // Prevenir envío normal del formulario
+
+             // Limpiar mensajes previos
+             messagesElement.innerHTML = '';
+
+             showMessage("Iniciando proceso de generación...", 'info');
+
+             // Validar campo de tema
+             const tema = topicInputElement.value.trim();
+             if (!tema) {
+                 showMessage("Error: Por favor, ingresa un tema de búsqueda.", 'error');
+                 return; // No continuar si el tema está vacío
+             }
+
+             // Recolectar TODOS los valores del formulario
+             const form = generateFormElement; // Referencia directa al formulario
+
+             const generateRequestPayload = {}; // Empezar vacío para construir el payload
+
+             // Usar FormData para recolectar campos con name="" (esto es más robusto)
+             const formData = new FormData(form);
+
+             // Iterar sobre FormData y construir el payload
+             for (const [key, value] of formData.entries()) {
+                 let processedValue = value;
+
+                 // Convertir tipos si es necesario (ej. números)
+                 const inputElement = form.querySelector(`#${key}`); // Encontrar el input por su ID (que coincide con name)
+                 if (inputElement && inputElement.type === 'number') {
+                      processedValue = parseInt(value);
+                      if (isNaN(processedValue)) processedValue = null;
+                 } else if (value === "") { // Convertir strings vacíos a null para campos Optional en Pydantic
+                      processedValue = null;
+                 }
+
+                 // Si el campo es un checkbox y no está marcado, FormData no lo incluye.
+                 // Si tienes campos booleanos, deberías manejarlos explícitamente.
+                 // Para los select, value es el option.value (string). Pydantic validará el tipo.
+
+                 generateRequestPayload[key] = processedValue;
+             }
+
+             // Asegurarse de que el campo 'tema' siempre está y no es nulo/vacío
+             if (!generateRequestPayload.tema) {
+                  showMessage("Error interno: El campo 'tema' no se recolectó correctamente.", 'error');
+                  return;
+             }
+
+
+              console.log("Payload a enviar:", generateRequestPayload); // Debugging
+
+             try {
+                 // Llama al endpoint POST /generate de tu API
+                 const response = await fetch(`${API_URL}/generate`, {
+                     method: 'POST',
+                     headers: {
+                         'Content-Type': 'application/json',
+                     },
+                     body: JSON.stringify(generateRequestPayload),
+                 });
+
+                 // Leer la respuesta JSON
+                 let result;
+                 try {
+                     result = await response.json();
+                 } catch (jsonError) {
+                     // Si la respuesta no es JSON (ej. un error del servidor web, no de FastAPI)
+                     const textResponse = await response.text();
+                     showMessage(`Error: Respuesta no JSON del servidor (${response.status}). Texto: ${textResponse.substring(0, 200)}...`, 'error');
+                     return; // Salir si no es JSON
+                 }
+
+
+                 if (!response.ok) {
+                     // Manejar errores HTTP (ej. 400, 500)
+                     showMessage(`Error en la generación (${response.status}): ${result.detail || JSON.stringify(result)}`, 'error');
+                 } else {
+                     // Manejar respuesta exitosa
+                     showMessage(`Proceso de generación disparado exitosamente. Artículo ID: ${result.article_id}.`, 'success');
+                     // console.log("Resultado de la API:", result); // Debugging
+                     // Opcional: Indicar al usuario que revise el archivo HTML local generado por el pipeline
+                     showMessage("Revisa el archivo HTML generado localmente en la carpeta 'back/'.", 'info');
+                 }
+
+             } catch (error) {
+                 showMessage(`Fallo en la solicitud de generación: ${error.message}`, 'error');
+             }
+         }
+
+
+        // === Inicialización del Dashboard ===
+        function initDashboard() {
+            showMessage("Dashboard inicializado. Ingresa un tema y parámetros para generar un artículo.", 'info');
+
+            // Adjuntar el event listener al formulario
+            generateFormElement.addEventListener('submit', handleGenerateSubmit);
+
+            // Opcional: Cargar una configuración por defecto para llenar el formulario al inicio
+            // Si quieres usar los defaults SQL para llenar el formulario al cargar,
+            // necesitarías un endpoint como GET /config/Defecto y usar fillFormWithConfig(config)
+            // Pero dijimos que quitabamos la complejidad de config por tema por ahora,
+            // asi que los valores por defecto del HTML se usan inicialmente.
+        }
+
+        // === Ejecutar Inicialización al Cargar la Página ===
+        window.onload = initDashboard;
+
+    </script>
+</body>
+</html>
