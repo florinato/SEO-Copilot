@@ -479,6 +479,16 @@ def get_generated_article_by_id(article_id: int) -> Optional[Dict[str, Any]]:
 
         article_data['imagenes'] = images_data # Añadir la lista de imágenes al diccionario del artículo
 
+        # === Añadir image_url y image_caption directamente al artículo si hay imágenes ===
+        if images_data:
+            # Tomar la URL y el caption de la primera imagen encontrada
+            article_data['image_url'] = images_data[0].get('url')
+            article_data['image_caption'] = images_data[0].get('caption')
+        else:
+            article_data['image_url'] = None
+            article_data['image_caption'] = None
+        # ===============================================================================
+
         print(f"✅ Artículo generado ID {article_id} y {len(images_data)} imágenes asociadas cargados.")
         return article_data
 

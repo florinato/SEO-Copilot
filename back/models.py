@@ -127,6 +127,8 @@ class GeneratedArticleDB(GeneratedArticleBase):
     estado: str
     score_fuentes_promedio: Optional[float] = None
     imagenes: List[GeneratedImageDB] = [] # Añadir lista de imágenes asociadas
+    image_url: Optional[str] = Field(None, description="URL de la imagen principal del artículo.")
+    image_caption: Optional[str] = Field(None, description="Pie de foto de la imagen principal del artículo.")
 
     class Config:
         orm_mode = True
